@@ -1,0 +1,51 @@
+name: Build macOS App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mac/**'
+  pull_request:
+    paths:
+      - 'mac/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check mac directory
+        run: |
+          echo "=== mac directory contents ==="
+          ls -la mac/
+          echo ""
+          echo "=== main.swift preview ==="
+          head -50 mac/main.swift
+      
+      - name: Build Swift project
+        run: |
+          cd mac
+          swiftc -o NetTray main.swift -framework AppKit
+      
+      - name: Verify build output
+        run: |
+          ls -la mac/NetTray
+          file mac/NetTray
+      
+      - name: Create zip archive
+        run: |
+          cd mac
+          zip -r ../NetTray-macOS.zip NetTray Info.plist
+          ls -la ../NetTray-macOS.zip
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetTray-macOS
+          path: NetTray-macOS.zip
+          retention-days: 30
